@@ -20,44 +20,48 @@ public class Request {
 	@JsonProperty("AccounRecord")
 	public AccounRecord accounRecord = new AccounRecord();
 	
-	@JacksonXmlRootElement(localName = "AccounRecord")
+	@JacksonXmlRootElement(localName = "sch:AccounRecord")
 	public class AccounRecord {
 		public static final String DEF_NMS = "http://itau.com.co/commoncannonical/v2/schemas";
-
-		@JsonProperty(value = "PaidCurAmt")
-		@JacksonXmlProperty(localName = "PaidCurAmt")
-		public PaidCurAmt publiCurAmt = new PaidCurAmt();
-
+		
 		@JsonProperty
-		@JacksonXmlProperty(localName = "acctType")
+		@JacksonXmlProperty(localName = "sch:acctType")
 		public String acctType = "";
-
-		@JacksonXmlProperty(localName = "acctId")
+		
+		@JacksonXmlProperty(localName = "sch:acctId")
 		public String accId = "";
 
+		@JsonProperty(value = "PaidCurAmt")
+		@JacksonXmlProperty(localName = "sch:PaidCurAmt")
+		public PaidCurAmt publiCurAmt = new PaidCurAmt();
+
+		
+
+	
+
 		@JsonProperty
-		@JacksonXmlProperty(localName = "chargeCode")
+		@JacksonXmlProperty(localName = "sch:chargeCode")
 		public String chargeCode = "";
 
 		@JsonProperty
-		@JacksonXmlProperty(localName = "trnCategory")
+		@JacksonXmlProperty(localName = "sch:trnCategory")
 		public String trnCategory = "";
 
 		@JsonProperty
-		@JacksonXmlProperty(localName = "desc")
+		@JacksonXmlProperty(localName = "sch:desc")
 		public String desc = "";
 
 		@JsonProperty
-		@JacksonXmlProperty(localName = "branchId")
+		@JacksonXmlProperty(localName = "sch:branchId")
 		public String branchId = "";
 
 		public class PaidCurAmt {
 
 			@JsonProperty
-			@JacksonXmlProperty(localName = "amt", namespace = DEF_NMS)
+			@JacksonXmlProperty(localName = "sch1:amt")
 			public String amt = "";
 			@JsonProperty
-			@JacksonXmlProperty(localName = "curCode", namespace = DEF_NMS)
+			@JacksonXmlProperty(localName = "sch1:curCode")
 			public String curCode = "";
 
 		}
