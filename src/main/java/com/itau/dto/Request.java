@@ -1,5 +1,7 @@
 package com.itau.dto;
 
+import java.math.BigDecimal;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -59,7 +61,7 @@ public class Request {
 
 			@JsonProperty
 			@JacksonXmlProperty(localName = "sch1:amt")
-			public String amt = "";
+			public BigDecimal amt;
 			@JsonProperty
 			@JacksonXmlProperty(localName = "sch1:curCode")
 			public String curCode = "";

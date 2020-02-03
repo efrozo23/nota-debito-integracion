@@ -2,6 +2,7 @@ package com.itau;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 
 import org.apache.camel.BeanInject;
@@ -76,7 +77,7 @@ public class ErrorTest {
 		dto.accounRecord.chargeCode = "633";
 		dto.accounRecord.trnCategory = "892";
 		dto.accounRecord.desc = "Nota Debito";
-		dto.accounRecord.publiCurAmt.amt = "100";
+		dto.accounRecord.publiCurAmt.amt = new BigDecimal(100);
 		dto.accounRecord.publiCurAmt.curCode = "CUP";
 		HttpEntity<Request> httpEntity = new HttpEntity<Request>(dto, httpHeaders);
 		ResponseEntity<String> r = restTemplate.exchange(URL + serverPort + "/accounts/v1/accounts/651016053/debit_transactions", HttpMethod.POST,httpEntity,String.class);
@@ -100,7 +101,7 @@ public class ErrorTest {
 		dto.accounRecord.chargeCode = "633";
 		dto.accounRecord.trnCategory = "892";
 		dto.accounRecord.desc = "Nota Debito";
-		dto.accounRecord.publiCurAmt.amt = "100";
+		dto.accounRecord.publiCurAmt.amt = new BigDecimal(100);
 		dto.accounRecord.publiCurAmt.curCode = "CUP";
 		HttpEntity<Request> httpEntity = new HttpEntity<Request>(dto, httpHeaders);
 		ResponseEntity<String> r = restTemplate.exchange(URL + serverPort + "/accounts/v1/accounts/651016053/debit_transactions", HttpMethod.POST,httpEntity,String.class);

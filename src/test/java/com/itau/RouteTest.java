@@ -2,6 +2,8 @@ package com.itau;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.math.BigDecimal;
+
 import org.apache.camel.BeanInject;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
@@ -47,7 +49,7 @@ public class RouteTest {
 		dto.accounRecord.chargeCode = "633";
 		dto.accounRecord.trnCategory = "892";
 		dto.accounRecord.desc = "Nota Debito";
-		dto.accounRecord.publiCurAmt.amt = "100";
+		dto.accounRecord.publiCurAmt.amt = new BigDecimal(100);
 		dto.accounRecord.publiCurAmt.curCode = "CUP";
 		Object obj = template.requestBodyAndHeader(Constants.ROUTE_CONSULTA_DATOS, dto, "acctId", "651016053");
 		assertNotNull(obj);

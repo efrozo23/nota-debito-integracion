@@ -4,8 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.meta.Exhaustive;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Predicate;
+import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.http.common.HttpOperationFailedException;
 import org.apache.camel.model.dataformat.JsonLibrary;
@@ -44,6 +48,13 @@ public class RouteConsultaDatos extends RouteBuilder{
 			.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
 			.setHeader(Exchange.CONTENT_TYPE, constant(MediaType.APPLICATION_JSON_UTF8))
 			.end();
+		
+		onException(DataException.class)
+			.handled(true)
+			.log(LoggingLevel.ERROR, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Se presento una exception generica fuera de ruta= ${exception.message}")
+			.setBody(simple("{\"error\": \"Error interno\" , \"detalle\":\"${exception.message}\"}"))
+			.setHeader(Exchange.CONTENT_TYPE, constant(MediaType.APPLICATION_JSON_UTF8))
+			.end();
 	
 		onException(JsonMapperException.class)
 			.handled(true)
@@ -78,7 +89,6 @@ public class RouteConsultaDatos extends RouteBuilder{
 		 		.marshal().json(JsonLibrary.Jackson)
 		 		.log(LoggingLevel.ERROR, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Filanizo \n ${body}")
 		 		.removeHeaders("*")
-		 		.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
 				.setHeader(Exchange.CONTENT_TYPE, constant(MediaType.APPLICATION_JSON_UTF8))
 		 	.end()
 		 	.onException(Exception.class)
@@ -144,23 +154,44 @@ public class RouteConsultaDatos extends RouteBuilder{
 		from(Constants.ROUTE_VALIDATOR_STATUS).routeId("VALIDATOR_DATA").streamCaching()
 			.errorHandler(noErrorHandler())
 			.log(LoggingLevel.DEBUG, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Validando Data del servicio")
-			.choice()
-				.when().jsonpath("$.Body.doDebitAccountRs.*.Status.[?(@.statusCode == '120' || @.statusCode == 120 || @.statusCode == '150' || @.statusCode == 150 || @.severity == 'Warning' )]")
-					.log(LoggingLevel.DEBUG, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Error en el servicio ")
-					.setProperty(Constants.RESPONSE_STATUS).jsonpath("$.Body.doDebitAccountRs.*.Status")
+			 
+			.setProperty("status").jsonpath("$.Body.doDebitAccountRs.*.Status.statusCode")
+			.setProperty("severity").jsonpath("$.Body.doDebitAccountRs.*.Status.severity")
+			
+			
+			.choice()				
+				.when(PredicateBuilder.and(exchangeProperty("status").isEqualTo("000"), exchangeProperty("severity").isEqualTo("Info")))
+					.log(LoggingLevel.DEBUG, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: No se encontro código de error")
 					.setProperty(Constants.RESPONSE_TRNINFOLIST).jsonpath("$.Body.doDebitAccountRs.*.*.TrnInfoList.TrnInfo")
-					.log(LoggingLevel.DEBUG, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Busqueda ${exchangeProperty.responseStatus}")
-					.throwException(DataException.class, "Error en info")
-					.endChoice()
-					.end()
-			.log(LoggingLevel.DEBUG, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: No se encontro código de error")
-			.setProperty(Constants.RESPONSE_TRNINFOLIST).jsonpath("$.Body.doDebitAccountRs.*.*.TrnInfoList.TrnInfo")
-			.setProperty(Constants.RESPONSE_STATUS).jsonpath("$.Body.doDebitAccountRs.*.Status")
-			.bean(ResponseHandler.class)
-			.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(200))
-			.setHeader(Exchange.CONTENT_TYPE, constant(MediaType.APPLICATION_JSON_UTF8))
-			.log(LoggingLevel.INFO, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Finalizo el proceso")
+					.setProperty(Constants.RESPONSE_STATUS).jsonpath("$.Body.doDebitAccountRs.*.Status")
+					.bean(ResponseHandler.class)
+					.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(200))
+					.setHeader(Exchange.CONTENT_TYPE, constant(MediaType.APPLICATION_JSON_UTF8))
+					.log(LoggingLevel.INFO, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Finalizo el proceso")					
+				.endChoice()	
+				.when(PredicateBuilder.and(exchangeProperty("status").isEqualTo("000"), exchangeProperty("severity").isEqualTo("Warning")))
+					.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(422))
+					.inOnly(Constants.ROUTE_EXCEPTION_STATUS)
+				.endChoice()	
+				.when(PredicateBuilder.or(exchangeProperty("status").convertToString().isEqualTo("120")))
+					.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
+					.inOnly(Constants.ROUTE_EXCEPTION_STATUS)
+				.endChoice()	
+				.when(PredicateBuilder.or(exchangeProperty("status").convertToString().isEqualTo("150")))
+					.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
+					.inOnly(Constants.ROUTE_EXCEPTION_STATUS)
+				.endChoice()	
 			.end();
+			
+			from(Constants.ROUTE_EXCEPTION_STATUS).routeId("EXCEPTION-STATUS").streamCaching()
+				.log(LoggingLevel.DEBUG, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Error en el servicio ")
+				.setProperty(Constants.RESPONSE_STATUS).jsonpath("$.Body.doDebitAccountRs.*.Status")
+				.setProperty(Constants.RESPONSE_TRNINFOLIST).jsonpath("$.Body.doDebitAccountRs.*.*.TrnInfoList.TrnInfo")
+				.log(LoggingLevel.DEBUG, logger, "Proceso: ${exchangeProperty.procesoId} | Mensaje: Busqueda ${exchangeProperty.responseStatus}")				
+				.throwException(DataException.class, "Error en info")
+			.end()
+			
+		.end();
 		
 	}
 	
