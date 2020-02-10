@@ -36,11 +36,7 @@ public class Request {
 		@JsonProperty(value = "PaidCurAmt")
 		@JacksonXmlProperty(localName = "sch:PaidCurAmt")
 		public PaidCurAmt publiCurAmt = new PaidCurAmt();
-
 		
-
-	
-
 		@JsonProperty
 		@JacksonXmlProperty(localName = "sch:chargeCode")
 		public String chargeCode = "";
